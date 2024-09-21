@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Analysis</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        html{
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #F5F5F5;
+            padding: 10rem, 0;
+        }
+
+        input[type=text] {
+            width: 100%;
+            padding: 12px 20px;
+            margin: 8px 0;
+            box-sizing: border-box;
+        }
+
+        .container {
+            margin: auto;
+            width: 100vw;
+            min-height: 100vh;
+            /* overflow: hidden; */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2rem;
+        }
+
+img {
+    overflow-clip-margin: inherit;
+    z-index: 101;
+}
+
+
+        #drop {
+            position: relative;
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            /* padding: 20px; */
+            font-size: 18px;
+            text-align: center;
+            cursor: pointer;
+            width: 30rem;
+            min-height: 20rem;
+            height: auto;
+            background-color: rgba(192, 192, 192, .3);
+            transition: all .2s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        #drop:hover {
+            background-color: rgba(192, 192, 192, .8);
+        }
+
+
+        .image-url {
+            display: flex;
+            flex-direction: column;
+            justify-items: center;
+            align-items: center;
+            gap: .5rem;
+            width: 30rem;
+        }
+
+        .image-url button {
+            width: 8rem;
+            padding: 1rem 0;
+            border: none;
+            border-radius: 5px;
+            background-color: #326bc0;
+            color: #fff;
+            cursor: pointer;
+            transition: background-color .2s ease-in-out;
+        }
+
+        .image-url button:hover {
+            background-color: #6082B6;
+        }
+
+        table {
+            max-width: 960px;
+            min-width: 30rem;
+            margin: 10px auto;
+        }
+
+        caption {
+            font-size: 1.6em;
+            font-weight: 400;
+            padding: 10px 0;
+        }
+
+        thead th {
+            font-weight: 500;
+            background: #8a97a0;
+            color: #FFF;
+        }
+
+        tr {
+            background: #f4f7f8;
+            border-bottom: 1px solid #FFF;
+            margin-bottom: 5px;
+        }
+
+        tr:nth-child(even) {
+            background: #e8eeef;
+        }
+
+        th,
+        td {
+            text-align: left;
+            padding: 20px;
+            font-weight: 300;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Image Analysis</h1>
+        <div id="drop">
+            <p>Photo preview</p>
+        </div>
+        <p>Or</p>
+        <h2>Paste an image URL</h2>
+        <div class="image-url">
+            <input type="text" id="url">
+            <button id="submit">Submit</button>
+        </div>
+        <img src="https://cdn.pixabay.com/animation/2023/08/15/07/22/07-22-02-443_512.gif" alt="Loading..."
+            width="100px" height="auto" id="loading" style="display: none;">
+        <div id="result" style="display: none;">
+        </div>
+    </div>
+
+    <script>
+        const dropZone = document.getElementById('drop');
+        const urlInput = document.getElementById('url');
+        const submitButton = document.getElementById('submit');
+        const loading = document.getElementById('loading');
+        const result = document.getElementById('result');
+
+
+
+        // dropZone.addEventListener('dragover', (e) => {
+        //     e.preventDefault();
+        //     dropZone.style.background = '#f0f0f0';
+        // });
+
+        // dropZone.addEventListener('dragleave', () => {
+        //     dropZone.style.background = '';
+        // });
+
+        // dropZone.addEventListener('drop', (e) => {
+        //     e.preventDefault();
+        //     const file = e.dataTransfer.files[0];
+        //     const reader = new FileReader();
+        //     reader.onload = () => {
+        //         const imageData = reader.result;
+        //         dropZone.innerHTML = `<img src="${imageData}" width="100%" height="auto" style="object-fit: cover;">`;
+                
+        //     };
+        //     reader.readAsDataURL(file);
+        // });
+
+        // dropZone.addEventListener('click', () => {
+        //     const input = document.createElement('input');
+        //     input.type = 'file';
+        //     input.accept = 'image/*';
+        //     input.onchange = () => {
+        //         const file = input.files[0];
+        //         const reader = new FileReader();
+        //         reader.onload = () => {
+        //             const imageData = reader.result;
+        //             dropZone.innerHTML = `<img src="${imageData}" width="100%" height="100%">`;
+        //         };
+        //         reader.readAsDataURL(file);
+        //     };
+        //     input.click();
+        // });
+
+        function displayResult(data) {
+            const table = document.createElement('table');
+            // table.setAttribute('border', '1');
+            result.appendChild(table);
+            const headerRow = document.createElement('thead');
+            table.appendChild(headerRow);
+
+            const headerCells = ['Name', 'Confidence', 'Categories'];
+
+            for (let i = 0; i < headerCells.length; i++) {
+                const cell = document.createElement('th');
+                cell.textContent = headerCells[i]; headerRow.appendChild(cell);
+            } for (let i = 0; i < data.length; i++) {
+                const
+                    item = data[i]; const row = document.createElement('tr'); table.appendChild(row); const
+                        nameCell = document.createElement('td'); nameCell.textContent = item.Name; row.appendChild(nameCell); const
+                            confidenceCell = document.createElement('td'); confidenceCell.textContent = +item.Confidence.toFixed(3) + ' %';
+                row.appendChild(confidenceCell); const categoriesCell = document.createElement('td'); item.Categories.forEach(c => {
+                    const textNode = document.createTextNode(c.Name);
+                    categoriesCell.appendChild(textNode);
+                    const br = document.createElement('br');
+                    categoriesCell.appendChild(br);
+                })
+                row.appendChild(categoriesCell);
+            }
+        }
+
+        urlInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                submitButton.click();
+            }
+        });
+
+        urlInput.addEventListener('input', () => {
+            dropZone.innerHTML = `<img src="${urlInput.value}" width="100%" style="object-fit: cover;">`;
+        })
+
+        submitButton.addEventListener('click', () => {
+            loading.style.display = 'block';
+            loading.scrollIntoView();
+            result.innerHTML = '';
+            //result.style.display = 'block';
+            //displayResult(data);
+
+            const formData = new FormData();
+            // formData.append('file', fileInput.files[0]);
+            formData.append('imageUrl', urlInput.value);
+
+            fetch('/analyze', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    displayResult(data);
+                    result.style.display = 'block';
+                    result.scrollIntoView();
+                })
+                .catch(error => {
+                    console.error(error);
+                }).finally(() => {
+                    loading.style.display = 'none';
+                });
+
+        });
+    </script>
+</body>
+
+</html>
